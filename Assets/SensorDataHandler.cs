@@ -34,13 +34,9 @@ public class SensorDataHandler : MonoBehaviour
         string[] str_arr = buffer.Split(',');
         if (str_arr[0] != "" &&
             str_arr[1] != "" &&
-            str_arr[2] != "" &&
-            str_arr[3] != "" &&
-            str_arr[4] != "" &&
-            str_arr[5] != "")
+            str_arr[2] != "")
         {
-            _topArmPivot.transform.eulerAngles = new Vector3(int.Parse(str_arr[0]), int.Parse(str_arr[1]), int.Parse(str_arr[2]));
-            _bottomArmPivot.transform.eulerAngles = new Vector3(int.Parse(str_arr[3]), int.Parse(str_arr[4]), int.Parse(str_arr[5]));
+            _topArmPivot.transform.eulerAngles = new Vector3(float.Parse(str_arr[0]), float.Parse(str_arr[1]), float.Parse(str_arr[2]));
                 
             serial.BaseStream.Flush();
         }

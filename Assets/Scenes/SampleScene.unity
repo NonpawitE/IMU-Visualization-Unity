@@ -138,7 +138,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &60156255
 Transform:
   m_ObjectHideFlags: 0
@@ -407,7 +407,7 @@ MonoBehaviour:
   _bottomArmPivot: {fileID: 60156254}
   _topArmAngle: 0
   _bottomArmAngle: 0
-  comPort: COM3
+  _comPort: 
 --- !u!4 &1644100848
 Transform:
   m_ObjectHideFlags: 0
