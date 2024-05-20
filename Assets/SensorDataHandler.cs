@@ -5,13 +5,16 @@ using System.IO.Ports;
 
 public class SensorDataHandler : MonoBehaviour
 {
-    [Header("Arm Pivots")]
-    [SerializeField] private GameObject _topArmPivot;
-    [SerializeField] private GameObject _bottomArmPivot;
+    [Header("Arm Objects")]
+    [SerializeField] private GameObject _armPivot;
+    [SerializeField] [Range(-180, 180)] private int _armX;
+    [SerializeField] [Range(-180, 180)] private int _armY;
+    [SerializeField] [Range(-180, 180)] private int _armZ;
 
-    [Header("Arm Angles")]
-    [SerializeField] [Range(0, 360)] private int _topArmAngle;
-    [SerializeField] [Range(0, 360)] private int _bottomArmAngle;
+    [Header("Arm Offsets")]
+    [SerializeField] [Range(-180, 180)] private int _offsetX;
+    [SerializeField] [Range(-180, 180)] private int _offsetY;
+    [SerializeField] [Range(-180, 180)] private int _offsetZ;
 
     [Header("Connectivities")]
     [SerializeField] private string _comPort;
@@ -21,24 +24,71 @@ public class SensorDataHandler : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        serial = new SerialPort(_comPort, 250400);
-        serial.Open();
+        if (!string.IsNullOrEmpty(_comPort))
+        {
+            try
+            {
+                serial = new SerialPort(_comPort, 250400);
+                serial.Open();
+                Debug.Log("Serial port opened: " + _comPort);
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError("Failed to open serial port: " + e.Message);
+            }
+        } else
+        {
+            Debug.LogWarning("Port name is empty, not opening serial port.");
+        }
     }
 
     // Update is called once per frame
     void Update()
     {
-        string buffer = serial.ReadLine();
-        serial.BaseStream.Flush();
-
-        string[] str_arr = buffer.Split(',');
-        if (str_arr[0] != "" &&
-            str_arr[1] != "" &&
-            str_arr[2] != "")
+        if (!string.IsNullOrEmpty(_comPort))
         {
-            _topArmPivot.transform.eulerAngles = new Vector3(float.Parse(str_arr[0]), float.Parse(str_arr[1]), float.Parse(str_arr[2]));
-                
+            string buffer = serial.ReadLine();
             serial.BaseStream.Flush();
+
+            string[] str_arr = buffer.Split(',');
+            if (str_arr[0] != "" &&
+                str_arr[1] != "" &&
+                str_arr[2] != "")
+            {
+                float x = float.Parse(str_arr[0]);
+                float y = float.Parse(str_arr[1]);
+                float z = float.Parse(str_arr[2]);
+
+                _armPivot.transform.eulerAngles = new Vector3(
+                    ClampAngle(x, _offsetX),    
+                    ClampAngle(y, _offsetY),    
+                    ClampAngle(z, _offsetZ)
+                );
+
+                serial.BaseStream.Flush();
+            }
+        } else
+        {
+            _armPivot.transform.eulerAngles = new Vector3(
+                ClampAngle(_armX, _offsetX),
+                ClampAngle(_armY, _offsetY),
+                ClampAngle(_armZ, _offsetZ)
+            );
         }
+    }
+
+    float ClampAngle(float angle, float offset)
+    {
+        float adjudstedAngle = angle + offset;
+
+        if (adjudstedAngle > 180.0f)
+        {
+            adjudstedAngle -= 360.0f;
+        } else if (adjudstedAngle < -180.0f)
+        {
+            adjudstedAngle += 360.0f;
+        }
+
+        return adjudstedAngle;
     }
 }
