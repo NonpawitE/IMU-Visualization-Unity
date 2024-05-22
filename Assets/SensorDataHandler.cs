@@ -1,20 +1,23 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using System.IO.Ports;
 
 public class SensorDataHandler : MonoBehaviour
 {
     [Header("Arm Objects")]
     [SerializeField] private GameObject _armPivot;
-    [SerializeField] [Range(-180, 180)] private int _armX;
-    [SerializeField] [Range(-180, 180)] private int _armY;
-    [SerializeField] [Range(-180, 180)] private int _armZ;
+    [SerializeField] [Range(-180, 180)] private float _armX;
+    [SerializeField] [Range(-180, 180)] private float _armY;
+    [SerializeField] [Range(-180, 180)] private float _armZ;
 
     [Header("Arm Offsets")]
-    [SerializeField] [Range(-180, 180)] private int _offsetX;
-    [SerializeField] [Range(-180, 180)] private int _offsetY;
-    [SerializeField] [Range(-180, 180)] private int _offsetZ;
+    [SerializeField] [Range(-180, 180)] private float _offsetX;
+    [SerializeField] [Range(-180, 180)] private float _offsetY;
+    [SerializeField] [Range(-180, 180)] private float _offsetZ;
+
+    [SerializeField] private Button setOffsetButton;
 
     [Header("Connectivities")]
     [SerializeField] private string _comPort;
@@ -40,6 +43,8 @@ public class SensorDataHandler : MonoBehaviour
         {
             Debug.LogWarning("Port name is empty, not opening serial port.");
         }
+
+        setOffsetButton.onClick.AddListener(SetOffset);
     }
 
     // Update is called once per frame
@@ -90,5 +95,13 @@ public class SensorDataHandler : MonoBehaviour
         }
 
         return adjudstedAngle;
+    }
+
+    void SetOffset()
+    {
+        Vector3 temp = _armPivot.transform.eulerAngles;
+        _offsetX = temp.x;
+        _offsetY = temp.y;
+        _offsetZ = temp.z;
     }
 }
