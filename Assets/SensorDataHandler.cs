@@ -13,9 +13,7 @@ public class SensorDataHandler : MonoBehaviour
     [SerializeField] [Range(-180, 180)] private float _armZ;
 
     [Header("Arm Offsets")]
-    [SerializeField] [Range(-180, 180)] private float _offsetX;
-    [SerializeField] [Range(-180, 180)] private float _offsetY;
-    [SerializeField] [Range(-180, 180)] private float _offsetZ;
+    [SerializeField] Quaternion offsetRotation;
 
     [SerializeField] private Button setOffsetButton;
 
@@ -44,11 +42,33 @@ public class SensorDataHandler : MonoBehaviour
             Debug.LogWarning("Port name is empty, not opening serial port.");
         }
 
-        setOffsetButton.onClick.AddListener(SetOffset);
+        setOffsetButton.onClick.AddListener(CaptureOffset);
     }
 
     // Update is called once per frame
     void Update()
+    {
+        Quaternion currentReadings = GetSensorReadings();
+
+        Quaternion offset = Quaternion.Inverse(offsetRotation) * currentReadings;
+
+        _armPivot.transform.rotation = offset;
+    }
+
+    private void OnApplicationQuit()
+    {
+        if (!string.IsNullOrEmpty(_comPort))
+        {
+            serial.Close();
+        }
+    }
+
+    void CaptureOffset()
+    {
+        offsetRotation = GetSensorReadings();
+    }
+
+    Quaternion GetSensorReadings()
     {
         if (!string.IsNullOrEmpty(_comPort))
         {
@@ -58,50 +78,20 @@ public class SensorDataHandler : MonoBehaviour
             string[] str_arr = buffer.Split(',');
             if (str_arr[0] != "" &&
                 str_arr[1] != "" &&
-                str_arr[2] != "")
+                str_arr[2] != "" &&
+                str_arr[3] != "")
             {
-                float x = float.Parse(str_arr[0]);
-                float y = float.Parse(str_arr[1]);
-                float z = float.Parse(str_arr[2]);
-
-                _armPivot.transform.eulerAngles = new Vector3(
-                    ClampAngle(x, _offsetX),    
-                    ClampAngle(y, _offsetY),    
-                    ClampAngle(z, _offsetZ)
-                );
+                float w = float.Parse(str_arr[0]);
+                float x = float.Parse(str_arr[1]);
+                float y = float.Parse(str_arr[2]);
+                float z = float.Parse(str_arr[3]);
 
                 serial.BaseStream.Flush();
+
+                return new Quaternion(x, -z, y, w);
             }
-        } else
-        {
-            _armPivot.transform.eulerAngles = new Vector3(
-                ClampAngle(_armX, _offsetX),
-                ClampAngle(_armY, _offsetY),
-                ClampAngle(_armZ, _offsetZ)
-            );
-        }
-    }
-
-    float ClampAngle(float angle, float offset)
-    {
-        float adjudstedAngle = angle + offset;
-
-        if (adjudstedAngle > 180.0f)
-        {
-            adjudstedAngle -= 360.0f;
-        } else if (adjudstedAngle < -180.0f)
-        {
-            adjudstedAngle += 360.0f;
         }
 
-        return adjudstedAngle;
-    }
-
-    void SetOffset()
-    {
-        Vector3 temp = _armPivot.transform.eulerAngles;
-        _offsetX = temp.x;
-        _offsetY = temp.y;
-        _offsetZ = temp.z;
+        return new Quaternion(0, 0, 0, 0);
     }
 }
